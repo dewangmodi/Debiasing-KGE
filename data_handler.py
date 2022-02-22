@@ -1,16 +1,7 @@
 import numpy as np
 import pandas as pd
 
-# gender related information
-gender_relation_name = "'sex or gender'"
-gender_relation_id = "P21"
-male_categories = ["'male'","'male organism'"]
-female_categories = ["'female'"]
-transgender_categories = ["'transgender female'","'intersex'","'genderqueer'","'non-binary'", "somevalue"]
-
-
-occupation_relation_name = "'occupation'"
-occupation_relation_id = "P106"
+from constants import *
 
 def load_data():
 	"""
@@ -74,3 +65,10 @@ def get_male_female_neutral_occupations(triplets, entity_labels, property_labels
 	female_occupations = probs[probs["diff"] < -cutoff].index
 	neutral_occupations = probs[(probs["diff"]>=-cutoff) & (probs["diff"]<=cutoff)].index
 	return male_occupations, female_occupations, neutral_occupations
+
+
+def get_entity_id(entity_labels, entity_name):
+	"""
+	Get a list of entity ids with a given name
+	"""
+	return entity_labels[entity_labels["name"]==entity_name]["id"].values.tolist()
