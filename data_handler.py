@@ -3,16 +3,16 @@ import pandas as pd
 
 from constants import *
 
-def load_data():
+def load_data(entity_path="knowledge_graphs/Indian/entities_labels.tsv", property_path="knowledge_graphs/Indian/properties_labels.tsv", triplets_path="knowledge_graphs/Indian/India_final.tsv"):
 	"""
 	Return the triplets, entity and property labels after 
 	dropping rows with missing values
 	"""
 
 	# load data
-	entity_labels = pd.read_csv("knowledge_graph/entities_labels.tsv",delimiter='\t', header=None, names=["id","name"])
-	property_labels = pd.read_csv("knowledge_graph/properties_labels.tsv",delimiter='\t',names=["id","name"])
-	triplets = pd.read_csv("knowledge_graph/India_final.tsv",delimiter='\t',header=None,names=["head","relation","tail"])
+	entity_labels = pd.read_csv(entity_path,delimiter='\t', header=None, names=["id","name"])
+	property_labels = pd.read_csv(property_path,delimiter='\t',names=["id","name"])
+	triplets = pd.read_csv(triplets_path,delimiter='\t',header=None,names=["head","relation","tail"])
 
 	# drop nan rows
 	triplets = triplets.dropna()
@@ -43,7 +43,7 @@ def get_occupation_triplets(triplets, entity_labels, property_labels, male_entit
 	female_occupation_triplets = occupation_triplets[occupation_triplets["head"].isin(female_entities)]	
 	return occupation_triplets, male_occupation_triplets, female_occupation_triplets
 
-def get_male_female_neutral_occupations(triplets, entity_labels, property_labels, cutoff, male_occupation_triplets=None, female_occupation_triplets=None):
+def get_male_female_neutral_occupations(triplets, entity_labels, property_labels, cutoff, male_occupation_triplets=None, female_occupation_triplets=None, get_df=False):
 	"""
 	For the given cutoff, return the list of male, female and neutral occupations
 	"""
@@ -60,6 +60,9 @@ def get_male_female_neutral_occupations(triplets, entity_labels, property_labels
 	probs["female"]/=female_occupation_triplets.shape[0]
 
 	probs["diff"] = probs["male"]-probs["female"]
+
+	if get_df is True:
+		return probs
 	
 	male_occupations = probs[probs["diff"] > cutoff].index
 	female_occupations = probs[probs["diff"] < -cutoff].index
