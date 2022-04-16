@@ -42,13 +42,20 @@ def get_averaged_entity_vector(entity_vec=None, entity_dict=None, dims=50, id_li
 	if entity_dict is None:
 		entity_dict, _ = load_ids()
 
-	vec = np.zeros((dims,1))
+	id_list_available = []
 	for i in id_list:
+		if i in entity_dict:
+			id_list_available.append(i)
+
+	assert len(id_list_available) > 0
+
+	vec = np.zeros((dims,1))
+	for i in id_list_available:
 		vec += entity_vec[entity_dict[i]].reshape(-1,1)
-	vec /= len(id_list)
+	vec /= len(id_list_available)
 	return vec
 
-def get_gender_vectors(entity_vec=None, entity_dict=None, dims=50):
+def get_gender_vectors(entity_vec=None, entity_dict=None, dims=50, male_category_ids=male_category_ids, female_category_ids=female_category_ids):
 	"""
 	Returns vectors for male and female (categories taken from constants.py)
 	"""

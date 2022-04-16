@@ -1,18 +1,34 @@
 from embedding_helper import *
 from data_handler import *
+import os
 
 DIMS = 50
 CUTOFF = 0.00002
+CALC_REMAINING = True
+REGION = "India"
+REGION_FOLDER = "Indian"
+
+entity_path = os.path.join("knowledge_graphs", REGION_FOLDER, "entities_labels.tsv")
+property_path = os.path.join("knowledge_graphs", REGION_FOLDER, "properties_labels.tsv")
+triplets_path = os.path.join("knowledge_graphs", REGION_FOLDER, REGION+"_final.tsv")
+
+# getting occupation sets
+triplets, entity_labels, property_labels = load_data(entity_path, property_path, triplets_path)
+
+
+if CALC_REMAINING:
+    male_categories, male_category_ids = get_remaining_categories(triplets, entity_labels)
+
+male_occupations, female_occupations, neutral_occupations = get_male_female_neutral_occupations(triplets, entity_labels, property_labels, CUTOFF, male_categories=male_categories, female_categories=female_categories)
+
 
 # loading embeddings
 entity_vec, relations_vec = load_embeddings(dims=DIMS)
 entity_dict, relations_dict = load_ids()
 
-male_vector, female_vector = get_gender_vectors(entity_vec, entity_dict, DIMS)
+male_vector, female_vector = get_gender_vectors(entity_vec, entity_dict, DIMS, male_category_ids=male_category_ids, female_category_ids=female_category_ids)
 
-# getting occupation sets
-triplets, entity_labels, property_labels = load_data()
-male_occupations, female_occupations, neutral_occupations = get_male_female_neutral_occupations(triplets, entity_labels, property_labels, CUTOFF)
+
 
 def get_occupation_projection_score(occupation_list, lamb=0):
     # here we skip the occupations whose vector is not available

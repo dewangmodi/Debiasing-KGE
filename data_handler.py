@@ -3,6 +3,8 @@ import pandas as pd
 
 from constants import *
 
+TOP_CATEGORIES = 10
+
 def load_data(entity_path="knowledge_graphs/Indian/entities_labels.tsv", property_path="knowledge_graphs/Indian/properties_labels.tsv", triplets_path="knowledge_graphs/Indian/India_final.tsv"):
 	"""
 	Return the triplets, entity and property labels after 
@@ -22,7 +24,7 @@ def load_data(entity_path="knowledge_graphs/Indian/entities_labels.tsv", propert
 	return triplets, entity_labels, property_labels
 
 
-def get_male_female_entities(triplets, entity_labels, property_labels):
+def get_male_female_entities(triplets, entity_labels, property_labels, male_categories=male_categories, female_categories=female_categories):
 	"""
 	Return list of male entities and female entities
 	"""
@@ -32,18 +34,18 @@ def get_male_female_entities(triplets, entity_labels, property_labels):
 	return male_entities, female_entities
 
 
-def get_occupation_triplets(triplets, entity_labels, property_labels, male_entities=None, female_entities=None):
+def get_occupation_triplets(triplets, entity_labels, property_labels, male_entities=None, female_entities=None, male_categories=male_categories, female_categories=female_categories):
 	"""
 	Return all occupation triplets, and occupation triplets of males and females
 	"""
 	if male_entities is None or female_entities is None:
-		male_entities, female_entities = get_male_female_entities(triplets, entity_labels, property_labels)
+		male_entities, female_entities = get_male_female_entities(triplets, entity_labels, property_labels, male_categories=male_categories, female_categories=female_categories)
 	occupation_triplets = triplets[triplets["relation"]==occupation_relation_name]
 	male_occupation_triplets = occupation_triplets[occupation_triplets["head"].isin(male_entities)]
 	female_occupation_triplets = occupation_triplets[occupation_triplets["head"].isin(female_entities)]	
 	return occupation_triplets, male_occupation_triplets, female_occupation_triplets
 
-def get_male_female_neutral_occupations(triplets, entity_labels, property_labels, cutoff, male_occupation_triplets=None, female_occupation_triplets=None, get_df=False):
+def get_male_female_neutral_occupations(triplets, entity_labels, property_labels, cutoff, male_occupation_triplets=None, female_occupation_triplets=None, get_df=False, male_categories=male_categories, female_categories=female_categories):
 	"""
 	For the given cutoff, return the list of male, female and neutral occupations
 	"""
@@ -51,7 +53,7 @@ def get_male_female_neutral_occupations(triplets, entity_labels, property_labels
 	# getting probabilities per occupation
 
 	if male_occupation_triplets is None or female_occupation_triplets is None:
-		_, male_occupation_triplets, female_occupation_triplets = get_occupation_triplets(triplets, entity_labels, property_labels)
+		_, male_occupation_triplets, female_occupation_triplets = get_occupation_triplets(triplets, entity_labels, property_labels, male_categories=male_categories, female_categories=female_categories)
 
 	male_counts = male_occupation_triplets["tail"].value_counts()
 	female_counts = female_occupation_triplets["tail"].value_counts()
@@ -75,3 +77,15 @@ def get_entity_id(entity_labels, entity_name):
 	Get a list of entity ids with a given name
 	"""
 	return entity_labels[entity_labels["name"]==entity_name]["id"].values.tolist()
+
+def get_remaining_categories(triplets, entity_labels, female_categories=female_categories, relation_name = gender_relation_name):
+	top_categories = triplets[triplets["relation"]==relation_name]["tail"].value_counts()[:TOP_CATEGORIES].index.tolist()
+	remaining_list = list(set(top_categories).difference(set(female_categories)))
+	remaining_ids = []
+	for i in remaining_list:
+		try:
+			remaining_ids+=get_entity_id(entity_labels, i)
+		except IndexError:
+			print("i = ",i)
+			exit()
+	return remaining_list, remaining_ids
